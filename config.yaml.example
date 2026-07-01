@@ -1,0 +1,89 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CodeSplitter configuration (EXAMPLE)
+#
+# Copy this file to "config.yaml" and edit the values for your setup:
+#   cp config.yaml.example config.yaml
+#
+# Everything here is read at runtime; no code changes needed to retarget it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Where your repositories live.
+# Point this at a PARENT folder; each immediate subdirectory that looks like a
+# repo is indexed as one repository (named after the folder).
+repos_root: "/path/to/your/repos"
+
+# Optional explicit list. If non-empty, this TAKES PRECEDENCE over repos_root
+# and only these are indexed. Use it to pick specific repos or rename them.
+#
+# Clear this list (repos: []) to fall back to repos_root.
+repos:
+  - name: example-repo
+    path: /path/to/your/repos/example-repo
+#  - name: another-repo
+#    path: /path/to/your/repos/another-repo
+
+# ── Models ───────────────────────────────────────────────────────────────────
+
+# Embedding model served by Ollama. The SAME model MUST be used at ingest time
+# and query time, or retrieval silently turns to noise.
+#   nomic-embed-text   768d   default, fast, light (~300MB)
+#   qwen3-embedding    1024d  better retrieval, a bit more compute
+#   mxbai-embed-large  1024d  heavier, strong general quality
+#embed_model: "nomic-embed-text"
+embed_model: "qwen3-embedding:0.6b"
+
+# Where the Ollama server lives. Leave blank to use the local default
+# (http://localhost:11434). Point it at another machine on your network to use
+# its GPU/CPU instead — the model must be pulled THERE, not locally.
+ollama_host: "http://localhost:11434"
+
+# LLM used for project/folder descriptions and for answering questions.
+# This is an OpenAI-COMPATIBLE endpoint, so any such provider works by changing
+# llm_base_url + answer_model + the LLM_API_KEY in .env.
+# Currently: Kimi (Moonshot). kimi-k2.6 is the flagship, 256k context window.
+answer_model: "kimi-k2.6"
+llm_base_url: "https://api.moonshot.ai/v1"
+
+# ── Vector store ───────────────────────────────────────────────────────────────
+
+# Where the index is written. This is a FOLDER on disk (the "output"), not a
+# binary. Delete it to start fresh. Safe to .gitignore.
+db_dir: "./repo_index"
+collection: "repo"
+
+# ── Chunking ───────────────────────────────────────────────────────────────────
+
+chunk_lines: 40           # target lines per code chunk
+chunk_lines_overlap: 5    # overlap between adjacent chunks
+max_chars: 1500           # hard cap before falling back to line-splitting
+text_chunk_size: 800      # chunk size for prose files (.md, .yaml, etc.)
+text_chunk_overlap: 100
+
+# ── Behavior toggles ─────────────────────────────────────────────────────────
+
+# Prepend each chunk's location (repo / module / file path) to the text BEFORE
+# embedding, while still storing the raw code. Grounds the vector so questions
+# that mention a module/file/feature name match the right code. Free (local).
+# Changing this requires `ingest --force` to take effect (file hashes are
+# unchanged, so a normal re-ingest would skip everything).
+embed_metadata_prefix: true
+
+# Embed an LLM-written SUMMARY of each chunk instead of the raw code.
+# Improves English-question -> code matching, but costs one LLM call per
+# chunk at ingest time. Leave false for the first run; turn on later.
+embed_summary: false
+
+# How many chunks to retrieve per question before handing them to the LLM.
+top_k: 8
+
+# ── Logging & cost estimation ────────────────────────────────────────────────
+
+# Where per-command logs are written. Tail them elsewhere, e.g.:
+#   tail -f logs/ingest.log
+log_dir: "./logs"
+
+# LLM pricing in USD per 1M tokens, used only to estimate spend in the logs.
+# kimi-k2.6 official Moonshot rates (June 2026). Update if your plan differs.
+price_input_per_mtok: 0.95
+price_cached_input_per_mtok: 0.16
+price_output_per_mtok: 4.00

@@ -3,6 +3,16 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# My sensitive files
+# embeddings, do not upload. Easy to decrypt
+repo_index/
+# logs can contain references
+logs/
+# my passwords
+.env*
+# local config with real paths / hosts (use config.yaml.example as template)
+config.yaml
+
 # C extensions
 *.so
 

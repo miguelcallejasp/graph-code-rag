@@ -1,0 +1,11 @@
+# Pure-Python orchestration + libraries. None of these is a "model" —
+# the embedding model is downloaded separately via Ollama (see README).
+
+llama-index-core>=0.11          # provides CodeSplitter (tree-sitter based)
+tree-sitter>=0.21               # the parser engine
+tree-sitter-language-pack>=0.2  # precompiled grammars (NOT tree-sitter-languages)
+ollama>=0.3                     # client for the local embedding server
+chromadb>=0.5                   # the vector store (writes the repo_index/ folder)
+openai>=1.40                    # OpenAI-compatible client (Kimi/Moonshot: answers + descriptions)
+pyyaml>=6.0                     # reads config.yaml
+python-dotenv>=1.0              # reads .env for the API key
