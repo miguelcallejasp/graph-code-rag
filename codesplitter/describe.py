@@ -152,7 +152,16 @@ def describe_repos(cfg: Config | None = None) -> None:
     for repo in repos:
         name, root = repo["name"], repo["path"]
         prompt = PROMPT_TEMPLATE.format(name=name, context=_context(root))
-        summary = llm_describe(prompt, cfg, max_tokens=6000)
+        summary = llm_describe(prompt, cfg, max_tokens=16000)
+
+        # A reasoning model can return nothing if the token budget is starved;
+        # skip rather than writing an empty file and a useless project vector.
+        if not summary.strip():
+            prog.tick()
+            log.warning(prog.line(
+                f"skipped {name}: model returned an empty description "
+                f"(likely max_tokens too small) | {USAGE.summary(cfg)}"))
+            continue
 
         # Save the full doc as a single artifact for humans...
         out_dir = cfg.log_path

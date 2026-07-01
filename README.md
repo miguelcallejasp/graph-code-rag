@@ -36,7 +36,7 @@ ollama serve &                 # leave running (or use the menu-bar app)
 ollama pull nomic-embed-text   # the embedding model, ~300MB
 
 # 2. Python dependencies
-cd CodeSplitter
+cd graph-code-rag
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 

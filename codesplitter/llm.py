@@ -14,6 +14,7 @@ from __future__ import annotations
 from openai import OpenAI
 
 from .config import Config
+from .runlog import get_logger
 from .usage import USAGE
 
 _client: OpenAI | None = None
@@ -38,7 +39,18 @@ def _complete(messages: list[dict], cfg: Config, max_tokens: int) -> str:
         messages=messages,
     )
     USAGE.add(resp.usage)
-    return resp.choices[0].message.content or ""
+    choice = resp.choices[0]
+    content = choice.message.content or ""
+    # A reasoning model can burn the whole token budget "thinking" and stop with
+    # finish_reason="length" before emitting any visible content. Surface that
+    # instead of silently returning an empty string.
+    if not content.strip() and choice.finish_reason == "length":
+        get_logger("llm", cfg).warning(
+            "Model hit max_tokens (%d) with no visible output "
+            "(finish_reason=length) \u2014 reasoning starved the answer. "
+            "Increase max_tokens.", max_tokens,
+        )
+    return content
 
 
 def summarize(code: str, cfg: Config) -> str:
